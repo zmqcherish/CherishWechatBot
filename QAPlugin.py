@@ -33,7 +33,7 @@ class QAPlugin(ProcessInterface):
                 question = qa[1]
                 answer = qa[2]
 
-                SpecialChatRoomIds = getChatroomIdByName([u'机器人调教群', 'qqq', u'知乎最牛逼兄弟会没有之一'])
+                SpecialChatRoomIds = getChatroomIdByName(['qqq', u'知乎最牛逼兄弟会没有之一'])
                 if (SpecialChatRoomIds is not None) and (destinationChatroomId in SpecialChatRoomIds):
                     if self.onlyOwerUse:
                         if 'ChatRoomOwner' in msg['User']:
