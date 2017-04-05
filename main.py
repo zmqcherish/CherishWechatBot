@@ -37,14 +37,5 @@ def text_reply(msg):
         except Exception as e:
             logging.error(e) # so that one plug's failure won't prevent others from being executed
 
-@itchat.msg_register([TEXT], isGroupChat=False)
-def text_reply(msg):
-    if isDebug:
-        logging.info(msg)
-    try:
-        plugins[].process(msg, TEXT)
-    except Exception as e:
-        logging.error(e)
-
 if __name__ == '__main__':
     itchat.run()
