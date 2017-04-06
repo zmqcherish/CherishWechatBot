@@ -11,8 +11,9 @@ from itchat.content import *
 import jieba
 from collections import Counter
 from urllib.request import urlretrieve
-from urllib import request
+from urllib.request import urlopen
 import json
+from bs4 import BeautifulSoup
 
 class GroupTagCloud(ProcessInterface):
     recordMaxNum = 500
@@ -47,9 +48,15 @@ class GroupTagCloud(ProcessInterface):
                     imgUrl = 'http://lorempixel.com/400/200/cats/'
                 elif shallRunObj['key'] == 'food':
                     imgUrl = 'http://lorempixel.com/400/200/food/'
+                elif shallRunObj['key'] == 'dog':
+                    url = 'http://random.dog/'
+                    html = urlopen(url)
+                    soup = BeautifulSoup(html.read(), 'html.parser')
+                    img = soup.find('img')
+                    imgUrl = url + str(img['src'])
                 elif shallRunObj['key'] == 'bing':
                     url = 'http://www.bing.com/HPImageArchive.aspx?format=js&idx=0&n=1'
-                    with request.urlopen(url) as f:
+                    with urlopen(url) as f:
                         data = f.read()
                     img = data.decode('utf-8')
                     img = json.loads(img)
@@ -82,6 +89,8 @@ class GroupTagCloud(ProcessInterface):
             return {'shallRun': True, 'key': None, 'userName': msg['ActualNickName'], 'groupName': msg['User']['NickName']}
         if re.search(r'^\s*/cat$', msg['Content']):
             return {'shallRun': True, 'key': 'cat'}
+        if re.search(r'^\s*/dog$', msg['Content']):
+            return {'shallRun': True, 'key': 'dog'}
         if re.search(r'^\s*/food$', msg['Content']):
             return {'shallRun': True, 'key': 'food'}
         if re.search(r'^\s*/bing', msg['Content']):

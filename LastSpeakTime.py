@@ -3,15 +3,16 @@ from itchat.content import *
 from pymongo import MongoClient, DESCENDING
 from utilities import *
 import itchat
+import tablib
 
 class lastRecord():
-    pId = ''
     name = ''
+    content = ''
     timestamp = -1
     rtime = None
-    def __init__(self,pId,name,rtime,timestamp = -1):
-        self.pId = pId
+    def __init__(self, name, content, rtime, timestamp = -1):
         self.name = name
+        self.content = content
         self.rtime = rtime
         self.timestamp = timestamp
 
@@ -43,20 +44,27 @@ class LastSpeakTime(ProcessInterface):
         room = itchat.update_chatroom(roomId[0], detailedMember=True)
         records = []
         for p in room['MemberList']:
-            pId = p['UserName']
-            record = list(self.coll.find({'to': groupName, 'fromId': pId}).sort([('timestamp', DESCENDING)]).limit(1))
+            name = p['NickName']
+            record = list(self.coll.find({'to': groupName, 'from': name}).sort({timestamp: 1}).limit(1))
             if len(record) == 0:
                 timestamp = -1
-                name = msg['NickName']
+                content = ''
                 rtime = None
             else:
                 record = record[0]
                 timestamp = record['timestamp']
-                name = record['from']
+                content = record['content']
                 rtime = record['time']
-            records.append(lastRecord(pId, name, rtime, timestamp))
+            records.append(lastRecord(name, content, rtime, timestamp))
 
         sorted(records, key=lambda r: r.timestamp, reverse=True)
+        header = (u'昵称', u'最后发言时间', u'内容')
+        mylist = []
+        for r in records:
+            mylist.append((r.name, r.rtime, r.content))
+        mylist = tablib.Dataset(*mylist, headers=header)
+        with open('1.xlsx', 'wb') as f:
+            f.write(mylist.xlsx)
         a =1
        # records = self.coll.find({'to': groupName}).sort([('timestamp', DESCENDING)]).limit(self.recordMaxNum)
 
