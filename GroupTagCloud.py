@@ -64,7 +64,7 @@ class GroupTagCloud(ProcessInterface):
         if userName is None:
             records = self.coll.find({'to': groupName}).sort([('timestamp',DESCENDING)]).limit(self.recordMaxNum)
         else:
-            records = self.coll.find({'from': userName, 'to': groupName}).sort([ ('timestamp', DESCENDING)]).limit(self.recordMaxNum)
+            records = self.coll.find({'from': userName, 'to': groupName}).sort([('timestamp', DESCENDING)]).limit(self.recordMaxNum)
         texts = [r['content'] for r in records]
         frequencies = Counter([w for text in texts for w in jieba.cut(text, cut_all=False) if len(w) > 1])
         frequencies = {k: min(self.maxFrequency, frequencies[k]) for k in frequencies}

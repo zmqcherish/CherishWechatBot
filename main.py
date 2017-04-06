@@ -6,6 +6,8 @@ from GroupTagCloud import GroupTagCloud
 from ActivityInfo import ActivityInfo
 from ProcessInterface import ProcessInterface
 from QAPlugin import QAPlugin
+from LastSpeakTime import LastSpeakTime
+
 import logging
 logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
 
@@ -20,6 +22,7 @@ plugins = [
     GroupTagCloud(),
     ActivityInfo(),
     QAPlugin(onlyOwerUse = True),
+    LastSpeakTime(),
     #GroupMessageForwarder([ '二群', '三群' ], [ 'AI二群测试中', 'AI三群测试' ])
 ]
 for plugin in plugins:
