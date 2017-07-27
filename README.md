@@ -40,7 +40,7 @@ CherishWechatBot 基于ItChat接口，以插件化的形式实现微信个人号
 3. deploy文件夹内的chengyu.dat文件是用于成语接龙功能的mongodb数据，需导入数据库 
 
 ## 作者
-* 微博 [http://weibo.com/zmqcherish](http://weibo.com/zmqcherish)
+* 微博 [@甄心cherish](http://weibo.com/zmqcherish)
 * 知乎 [https://www.zhihu.com/people/zmqcherish/](https://www.zhihu.com/people/zmqcherish/)
 
 ## 问题和建议
