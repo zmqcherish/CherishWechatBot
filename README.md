@@ -12,6 +12,8 @@ CherishWechatBot 基于ItChat接口，以插件化的形式实现微信个人号
 ## 安装
 项目支持Win和Linux。依赖的环境有python、mongodb等。Linux下，运行运行deploy文件夹内的deploy.sh文件，然后安装requirements.txt中的库
 
+//等空了推一个简化的安装方式
+
 ## 运行
 如果以上安装都顺利的话，在命令行中执行“python3 -u main.py”将出现二维码，用微信扫描登录即可运行
 
