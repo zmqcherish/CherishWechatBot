@@ -4,75 +4,83 @@ from ProcessInterface import ProcessInterface
 import numpy as np
 from PIL import Image
 from wordcloud import WordCloud
-import os
-import re
 import itchat
 from itchat.content import *
 import jieba
 from collections import Counter
-from urllib.request import urlretrieve
-from urllib.request import urlopen
-import json
-from bs4 import BeautifulSoup
+import gensim
+import itertools
 
 class GroupTagCloud(ProcessInterface):
     recordMaxNum = 500
     maxFrequency = 40
-    imgDir = 'TagCloud'
+    imgDir = 'Temp'
 
     def __init__(self, maskPath = None):
-        self.client = MongoClient()
-        self.coll = self.client[dbName][collName]
+        # self.coll = DbClient[dbName][collName]
         if maskPath is None:
-            self.wordCloud = WordCloud(font_path=fontPath, width=400, height=400, max_words=100)
+            self.wordCloud = WordCloud(font_path=FontPath, width=500, height=500, max_words=100)
         else:
             self.mask = np.array(Image.open(maskPath))
-            self.wordCloud = WordCloud(font_path=fontPath, mask=self.mask, max_words=100)
+            self.wordCloud = WordCloud(font_path=FontPath, mask=self.mask, max_words=100)
 
-        if not os.path.exists(self.imgDir):
-            os.mkdir(self.imgDir)
         logging.info('GroupTagCloud connected to MongoDB.')
 
     def process(self, msg, type):
+        if type != TEXT:
+            return
+
         shallRunObj = self.isRun(msg, type)
         if shallRunObj['shallRun']:
-            destinationChatroomId = msg['FromUserName'] if re.search('@@', msg['FromUserName']) else msg['ToUserName']
-            if shallRunObj['key'] is None:
-                logging.info('Generating tag cloud for {0}.'.format(shallRunObj['groupName']))
-                fn = self.generateTagCloudForGroup(shallRunObj['groupName'], shallRunObj['userName'])
-                logging.info('Sending tag cloud file {0} to {1}.'.format(fn, destinationChatroomId))
-                itchat.send('@img@{0}'.format(fn), destinationChatroomId)
-            else:
-                logging.info(shallRunObj['key'])
-                if shallRunObj['key'] == 'cat':
-                    imgUrl = 'http://lorempixel.com/400/200/cats/'
-                elif shallRunObj['key'] == 'food':
-                    imgUrl = 'http://lorempixel.com/400/200/food/'
-                elif shallRunObj['key'] == 'dog':
-                    url = 'http://random.dog/'
-                    html = urlopen(url)
-                    soup = BeautifulSoup(html.read(), 'html.parser')
-                    img = soup.find('img')
-                    imgUrl = url + str(img['src'])
-                elif shallRunObj['key'] == 'bing':
-                    url = 'http://www.bing.com/HPImageArchive.aspx?format=js&idx=0&n=1'
-                    with urlopen(url) as f:
-                        data = f.read()
-                    img = data.decode('utf-8')
-                    img = json.loads(img)
-                    imgUrl = 'http://www.bing.com' + img['images'][0]['url']
-                fn = generateTmpFileName(self.imgDir)
-                urlretrieve(imgUrl, fn)
-                itchat.send('@img@{0}'.format(fn), destinationChatroomId)
+            toLog = 'Generating tag cloud for {0}.'.format(shallRunObj['groupName'])
+            if shallRunObj['userName']:
+                toLog = '{0} Username {1}.'.format(toLog, shallRunObj['userName'])
+            logging.info(toLog)
+            fn = self.generateTagCloudForGroupV2(shallRunObj['groupName'], shallRunObj['userName'])
+            group_id = get_group_id(msg)
+            logging.info('Sending tag cloud file {0} to {1}.'.format(fn, group_id))
+            itchat.send('@img@{0}'.format(fn), group_id)
+
+            # Generate a tag cloud image from the latest self.recordMaxNum records, based on TF-IDF. Return the file name.
+
+    def generateTagCloudForGroupV2(self, groupName, userName=None):
+        records = None
+        if userName is None:
+            records = HisColl.find({'to': groupName, 'type': TEXT}).sort([('timestamp', DESCENDING)]).limit(self.recordMaxNum)
+            allRecords = HisColl.find({'to': {'$ne': groupName}, 'type': TEXT}).sort([('timestamp', DESCENDING)]).limit(
+                self.recordMaxNum * 5)
+            allRecordsGroup = sorted(allRecords, key=lambda x: x['to'])
+        else:
+            records = HisColl.find({'from': userName, 'to': groupName, 'type': TEXT}).sort([('timestamp', DESCENDING)]).limit(
+                self.recordMaxNum)
+            allRecords = HisColl.find({'from': {'$ne': userName}, 'to': groupName, 'type': TEXT}).sort(
+                [('timestamp', DESCENDING)]).limit(self.recordMaxNum * 5)
+            allRecordsGroup = sorted(allRecords, key=lambda x: x['from'])
+        docThisGroup = list(jieba.cut(' '.join([r['content'] for r in records])))  # remove the image records
+        allRecordsGroup = itertools.groupby(allRecordsGroup, lambda x: x['to'])
+        docsOtherGroups = [
+            list(jieba.cut(' '.join([r['content'] for r in list(g)])))
+            for k, g in allRecordsGroup]
+        docs = [docThisGroup] + docsOtherGroups
+        dictionary = gensim.corpora.Dictionary(docs)
+        docs = [dictionary.doc2bow(doc) for doc in docs]
+        id2token = {v: k for k, v in dictionary.token2id.items()}
+        tfidf = gensim.models.tfidfmodel.TfidfModel(corpus=docs)
+        tagCloudFrequencies = {id2token[x[0]]: x[1] for x in tfidf[docs[0]]}
+
+        img = self.wordCloud.generate_from_frequencies(tagCloudFrequencies).to_image()
+        fn = generateTmpFileName(self.imgDir)
+        img.save(fn)
+        return fn
 
     # Generate a tag cloud image from the latest self.recordMaxNum images. Return the file name.
     def generateTagCloudForGroup(self, groupName, userName=None):
         records = None
         if userName is None:
-            records = self.coll.find({'to': groupName}).sort([('timestamp',DESCENDING)]).limit(self.recordMaxNum)
+            records = HisColl.find({'to': groupName}).sort([('timestamp', DESCENDING)]).limit(self.recordMaxNum)
         else:
-            records = self.coll.find({'from': userName, 'to': groupName}).sort([('timestamp', DESCENDING)]).limit(self.recordMaxNum)
-        texts = [r['content'] for r in records]
+            records = HisColl.find({'from': userName, 'to': groupName}).sort([('timestamp', DESCENDING)]).limit(self.recordMaxNum)
+        texts = [r['content'] for r in records if r['type'] == TEXT]
         frequencies = Counter([w for text in texts for w in jieba.cut(text, cut_all=False) if len(w) > 1])
         frequencies = {k: min(self.maxFrequency, frequencies[k]) for k in frequencies}
         img = self.wordCloud.generate_from_frequencies(frequencies).to_image()
@@ -83,20 +91,8 @@ class GroupTagCloud(ProcessInterface):
     def isRun(self, msg, type):
         if type != TEXT or 'Content' not in msg:
             return {'shallRun': False}
-        if re.search(r'^\s*/tagcloud$', msg['Content']):
-            return {'shallRun': True, 'key': None, 'userName': None, 'groupName': msg['User']['NickName']}
-        if re.search(r'^\s*/tag$', msg['Content']):
-            return {'shallRun': True, 'key': None, 'userName': msg['ActualNickName'], 'groupName': msg['User']['NickName']}
-        if re.search(r'^\s*/cat$', msg['Content']):
-            return {'shallRun': True, 'key': 'cat'}
-        if re.search(r'^\s*/dog$', msg['Content']):
-            return {'shallRun': True, 'key': 'dog'}
-        if re.search(r'^\s*/food$', msg['Content']):
-            return {'shallRun': True, 'key': 'food'}
-        if re.search(r'^\s*/bing', msg['Content']):
-            return {'shallRun': True, 'key': 'bing'}
+        if msg['Content'] == '/tagcloud':
+            return {'shallRun': True, 'userName': None, 'groupName': msg['User']['NickName']}
+        if msg['Content'] == '/tag':
+            return {'shallRun': True, 'userName': msg['ActualNickName'], 'groupName': msg['User']['NickName']}
         return {'shallRun': False}
-
-# if __name__ == '__main__':
-#     groupTagCloud = GroupTagCloud()
-#     groupTagCloud.generateTagCloudForGroup('TestGroup')

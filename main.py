@@ -16,7 +16,7 @@ from MsDuilian import MsDuilian
 from MicoIce import MicoIce
 from BingText2Speech import BingText2Speech
 from ChengYuJieLong import ChengYuJieLong
-from VSGame import VSGame
+# from VSGame import VSGame
 from LrcCreator import LrcCreator
 from EasterEgg import EasterEgg
 from utilities import *
@@ -47,7 +47,7 @@ plugins = [
     ChengYuJieLong(),
     LrcCreator(),
     EasterEgg(),
-    VSGame(),
+    # VSGame(),
     MicoIce(),
     #GroupMessageForwarder([ '二群', '三群' ], [ 'AI二群测试中', 'AI三群测试' ])
 ]
