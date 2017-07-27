@@ -1,0 +1,11 @@
+itchat
+pymongo
+jieba
+wordcloud
+numpy
+matplotlib
+gensim
+pillow
+tablib
+bs4
+pypinyin
