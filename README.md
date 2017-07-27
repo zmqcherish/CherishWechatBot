@@ -15,9 +15,6 @@ CherishWechatBot 基于ItChat接口，以插件化的形式实现微信个人号
 ## 运行
 如果以上安装都顺利的话，在命令行中执行“python3 -u main.py”将出现二维码，用微信扫描登录即可运行
 
-## Tips
-1. 
-
 ## 功能
 详细的功能列表查看src文件夹下help.png文件
 * 成语接龙
@@ -45,3 +42,6 @@ CherishWechatBot 基于ItChat接口，以插件化的形式实现微信个人号
 ## 作者
 * 微博 [http://weibo.com/zmqcherish](http://weibo.com/zmqcherish)
 * 知乎 [https://www.zhihu.com/people/zmqcherish/](https://www.zhihu.com/people/zmqcherish/)
+
+## 问题和建议
+欢迎大家提出一些有意思的feature，共同学习
