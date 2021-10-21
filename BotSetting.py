@@ -1,10 +1,11 @@
 from ProcessInterface import ProcessInterface
 from itchat.content import *
-from utilities import *
+from util import *
 import itchat
 import re
 from threading import Thread
 from time import sleep
+
 
 def XiaoIceEnd():
     sleep(XiaoIceTimeInterval)
@@ -18,6 +19,7 @@ def XiaoIceEnd():
 #     if groupId in DuilianGroup:
 #         del DuilianGroup[groupId]
 #         itchat.send('【时间到，结束对联模式】', groupId)
+
 
 class BotSetting(ProcessInterface):
     def __init__(self):
@@ -47,17 +49,17 @@ class BotSetting(ProcessInterface):
             itchat.send('【对联模式结束】', group_id)
 
         elif content == '成语接龙':
-            cy = random.choice(list(ChengyuColl.find()))
-            ChengyuGroup[group_name] = cy['last']
+            cy = random.choice(select_item_with_sql('select * from chengyu'))
+            chengyu_group[group_name] = cy['last']
             text = '成语接龙模式开启，我先来：\n{}'.format(cy['cy'])
             if Settings[SettingEnum.XiaoIceGroup] == group_id:
                 text = text + '(自动停止变身)'
                 Settings[SettingEnum.XiaoIceGroup] = ''
             itchat.send(text, group_id)
         elif content == '结束成语接龙':
-            if group_name not in ChengyuGroup:
+            if group_name not in chengyu_group:
                 return
-            del ChengyuGroup[group_name]
+            del chengyu_group[group_name]
             itchat.send('【成语接龙模式结束】', group_id)
 
         elif content == '变身':
@@ -120,12 +122,14 @@ class BotSetting(ProcessInterface):
             Settings[SettingEnum.QA] = False
 
         elif content == '/on -wd':
+            pass
             # itchat.send('防撤回功能已打开', group_id)
-            if group_name in NotWithDrawGroup:
-                NotWithDrawGroup.remove(group_name)
+            # if group_name in NotWithDrawGroup:
+            #     NotWithDrawGroup.remove(group_name)
         elif content == '/off -wd':
+            pass
             # itchat.send('防撤回功能已关闭', group_id)
-            NotWithDrawGroup.add(group_name)
+            # NotWithDrawGroup.add(group_name)
 
         elif content == '/on -tl':
             if group_name in NotTulingGroup:
@@ -134,10 +138,12 @@ class BotSetting(ProcessInterface):
             NotTulingGroup.add(group_name)
 
         elif content == '/on -w':
-            if group_name in NotWelcomeGroup:
-                NotWelcomeGroup.remove(group_name)
+            pass
+            # if group_name in NotWelcomeGroup:
+            #     NotWelcomeGroup.remove(group_name)
         elif content == '/off -w':
-            NotWelcomeGroup.add(group_name)
+            pass
+            # NotWelcomeGroup.add(group_name)
 
         elif content == '/off -sz':
             if group_name in VSGameGroup:

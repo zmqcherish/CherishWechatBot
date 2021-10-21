@@ -1,4 +1,4 @@
-from utilities import *
+from util import *
 from ProcessInterface import ProcessInterface
 import requests
 import os
@@ -8,8 +8,8 @@ from datetime import datetime
 from urllib.request import urlretrieve
 from urllib.request import urlopen
 import json
-from pymongo import DESCENDING
 from bs4 import BeautifulSoup
+
 
 class KeyHandler(ProcessInterface):
     def __init__(self):
@@ -35,29 +35,32 @@ class KeyHandler(ProcessInterface):
         self.group_id, group_name = get_group_info(msg)
         if content[-1] == '#':  #自动撤回
             self.revokeMsg(msg['MsgId'])
+            return
+        if content == '/m': #大萌语句
+            # if not Settings[SettingEnum.Dameng]:
+            #     return
+            # logging.info(group_name + ': m')
+            # # i = random.randint(0, 1)
+            # i = 0
+            # if i == 0:
+            #     records = list(HisColl.find({'to': group_name, 'userName': self.damengId}))
+            #     if len(records) == 0:
+            #         return
+            #     record = random.choice(records)
+            #     text = '大萌曾经说过：' + record['content']
+            #     itchat.send(text, self.group_id)
+            # else:  # 1
+            #     # 发图
+            #     pass
+            return
 
-        elif content == '/m': #大萌语句
-            if not Settings[SettingEnum.Dameng]:
-                return
-            logging.info(group_name + ': m')
-            # i = random.randint(0, 1)
-            i = 0
-            if i == 0:
-                records = list(HisColl.find({'to': group_name, 'userName': self.damengId}))
-                if len(records) == 0:
-                    return
-                record = random.choice(records)
-                text = '大萌曾经说过：' + record['content']
-                itchat.send(text, self.group_id)
-            else:  # 1
-                # 发图
-                pass
 
-        elif content == '/help':    #帮助文档
+        if content == '/help':    #帮助文档
             logging.info(group_name + ': help')
             itchat.send_image(self.help_imgpath, self.group_id)
+            return
 
-        elif content == '/bing' or content == '/bing -r':   #必应壁纸
+        if content == '/bing' or content == '/bing -r':   #必应壁纸
             logging.info(group_name + ': bing')
             if msg['Content'] == '/bing':  # 取当天的壁纸
                 fn = 'src/bing/{0}.jpg'.format(datetime.now().strftime('%Y-%m-%d'))
@@ -72,23 +75,24 @@ class KeyHandler(ProcessInterface):
             else:
                 fn = 'src/bing/' + random.choice(os.listdir('Bing'))
             itchat.send_image(fn, self.group_id)
-        elif content.startswith('/wd'):
-            index = 1
-            if content != '/wd':
-                index = int(content[-1])
-            record = list(WithDrawColl.find({'group': group_name}).sort([('timestamp', DESCENDING)]).limit(index))[-1]
-            
-            name = record['name']
-            text = record['content']
-            msg_type = record['msgtype']
-            if msg_type == PICTURE:
-                itchat.send('“{}”撤回了一张见不得人的图片：\n'.format(name), self.group_id)
-                itchat.send_image(text, self.group_id)
-            elif msg_type == VOICE:
-                itchat.send('“{}”撤回了一条见不得人的语音：\n'.format(name), self.group_id)
-                itchat.send_file(text, self.group_id)
-            else:
-                itchat.send('“{}”撤回了一条见不得人的消息：\n{}'.format(name, text), self.group_id)
+            return
+        # if content.startswith('/wd'):
+        #     index = 1
+        #     if content != '/wd':
+        #         index = int(content[-1])
+        #     record = list(WithDrawColl.find({'group': group_name}).sort([('timestamp', DESCENDING)]).limit(index))[-1]
+        #
+        #     name = record['name']
+        #     text = record['content']
+        #     msg_type = record['msgtype']
+        #     if msg_type == PICTURE:
+        #         itchat.send('“{}”撤回了一张见不得人的图片：\n'.format(name), self.group_id)
+        #         itchat.send_image(text, self.group_id)
+        #     elif msg_type == VOICE:
+        #         itchat.send('“{}”撤回了一条见不得人的语音：\n'.format(name), self.group_id)
+        #         itchat.send_file(text, self.group_id)
+        #     else:
+        #         itchat.send('“{}”撤回了一条见不得人的消息：\n{}'.format(name, text), self.group_id)
         # elif content == '/cat':
         #     logging.info(group_name + ': cat')
         #     r = requests.get('http://random.cat/meow').json()
@@ -106,7 +110,7 @@ class KeyHandler(ProcessInterface):
         #     imgUrl = url + str(img['src'])
         #     self.send_img(imgUrl)
 
-        elif content in self.hebe:
+        if content in self.hebe:
             logging.info(group_name + ': hebe')
             imgUrl = random.choice(self.hebeUrl)
             self.send_img(imgUrl)
@@ -168,9 +172,9 @@ class KeyHandler(ProcessInterface):
             # itchat.send('"{}"群成员已更新'.format(groupName), self.groupId)
             itchat.send('群名单已更新', self.group_id)
 
-    def send_img(self, imgUrl):
+    def send_img(self, img_url):
         fn = generateTmpFileName(self.imgDir)
-        urlretrieve(imgUrl, fn)
+        urlretrieve(img_url, fn)
         itchat.send_image(fn, self.group_id)
 
     def revokeMsg(self, msgId):

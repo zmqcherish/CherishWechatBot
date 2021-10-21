@@ -1,8 +1,7 @@
 # -*- coding: utf-8 -*-
-from utilities import *
+from util import *
 from itchat.content import *
 from ProcessInterface import ProcessInterface
-from pymongo import DESCENDING
 import itchat
 import numpy as np
 # from matplotlib.font_manager import FontProperties
@@ -13,6 +12,7 @@ import matplotlib.pyplot as pp
 from time import time
 from datetime import datetime, timedelta
 from collections import Counter
+
 
 class ActivityInfo(ProcessInterface):
     timestampSubtract = 3600 * 24  # 1 day
@@ -39,10 +39,10 @@ class ActivityInfo(ProcessInterface):
             logging.info('Generating activity info for {}-{}.'.format(group_name, user))
             fn = self.generateActivityInfoForPerson(group_name, user)
             itchat.send_image(fn, group_id)
-            
+
     def generateActivityInfoForPerson(self, group_name, user):
-        hour_data=[0] * 24
-        records = list(HisColl.find({'to': group_name, 'from': user}))
+        hour_data = [0] * 24
+        records = select_item_with_sql("select * from msg where group_name='{}' and from='{}'".format(group_name, user))
         for r in records:
             rtime = datetime.strptime(r['time'], '%Y-%m-%d %H:%M:%S')
             hour = rtime.hour
@@ -67,13 +67,14 @@ class ActivityInfo(ProcessInterface):
         return fn
 
     def generateActivityInfoForGroup(self, group_name):
-        timestampYesterday = int(time()) - self.timestampSubtract    #北京时间
-        records = list(HisColl.find({'to': group_name, 'timestamp': {'$gt': timestampYesterday}}).sort([('timestamp', DESCENDING)]))
+        timestamp_yesterday = int(time()) - self.timestampSubtract    #北京时间
+        records = select_item_with_sql("select * from msg where group_name='{}' and timestamp>{} ORDER BY timestamp desc".format(group_name, timestamp_yesterday))
+        # list(HisColl.find({'to': group_name, 'timestamp': {'$gt': timestamp_yesterday}}).sort([('timestamp', DESCENDING)]))
         
         # Get histogram for activity
         hist, bins = np.histogram([x['timestamp'] for x in records], bins=24)
         center = (bins[:-1] + bins[1:]) / 2
-        datex = [datetime.fromtimestamp(x) + timedelta(hours=8) for x in center]
+        datex = [datetime.fromtimestamp(x, time_zone) for x in center]
         pp.figure(figsize=(6, 16))
         # pp.subplots_adjust(left=0.1, bottom=0.1, right=0.9, top=0.9, wspace=0, hspace=0.5)
         pp.subplots_adjust(bottom=0.05, top=0.95, hspace=0.4)
@@ -91,7 +92,7 @@ class ActivityInfo(ProcessInterface):
         fn = generateTmpFileName(self.imgDir)
         pp.savefig(fn)
         return fn
-    
+
     def get_activitydata(self, records):
         pieDat = Counter([x['from'] for x in records])
         pieDatSorted = sorted([(k, pieDat[k]) for k in pieDat], key=lambda x: x[1], reverse=True)
@@ -109,9 +110,9 @@ class ActivityInfo(ProcessInterface):
         pp.xlabel('用户', fontproperties=FontProp)
         pp.ylabel('24小时消息数', fontproperties=FontProp)
         ax.set_xlim([0, len(xText) + 1 - width])
-    
+
     def get_activitydata2(self, group_name):
-        records = list(HisColl.find({'to': group_name}))
+        records = select_item_with_sql("select * from msg where group_name='{}'".format(group_name))
         pieDat = Counter([x['from'] for x in records])
         pieDatSorted = sorted([(k, pieDat[k]) for k in pieDat], key=lambda x: x[1], reverse=True)
         if len(pieDatSorted) > self.maxActivityInfoCount:

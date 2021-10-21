@@ -1,54 +1,57 @@
-# -*- coding: utf-8 -*-
 from itchat.content import *
-from HistoryRecorder import HistoryRecorder
-from GroupTagCloud import GroupTagCloud
-from ActivityInfo import ActivityInfo
-from ProcessInterface import ProcessInterface
-from QAPlugin import QAPlugin
-from LastSpeakTime import LastSpeakTime
+from HistoryRecorder import *
+# from GroupTagCloud import GroupTagCloud
+from ActivityInfo import *
+# from ProcessInterface import ProcessInterface
+# from QAPlugin import QAPlugin
+# from LastSpeakTime import LastSpeakTime
 from MemberDistribution import MemberDistribution
-from PrivateChat import PrivateChat
-from SysReminder import SysReminder
-from Tuling import Tuling
-from KeyHandler import KeyHandler
-from BotSetting import BotSetting
+# from PrivateChat import PrivateChat
+from SysReminder import *
+# from Tuling import Tuling
+from KeyHandler import *
+from BotSetting import *
 from MsDuilian import MsDuilian
-from MicoIce import MicoIce
-from BingText2Speech import BingText2Speech
-from ChengYuJieLong import ChengYuJieLong
+# from MicoIce import MicoIce
+# from BingText2Speech import BingText2Speech
+from ChengYuJieLong import *
 # from VSGame import VSGame
-from LrcCreator import LrcCreator
-from EasterEgg import EasterEgg
-from utilities import *
+# from LrcCreator import LrcCreator
+# from EasterEgg import EasterEgg
+# import io
+# import sys
+from util import *
 import shutil
 import logging
 logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
 
+# sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='gb18030')         #改变标准输出的默认编码
 # Some global switches for debugging use only
 isDebug = False
 
-itchat.auto_login(True, enableCmdQR=2)
+# itchat.auto_login(True, enableCmdQR=2)
+itchat.auto_login(True)
 
 settingPlugin = BotSetting()        # 机器人设置
-privateChatPlugin = PrivateChat()   # 私聊调用 tuling
+# privateChatPlugin = PrivateChat()   # 私聊调用 tuling
 sysReminderPlugin = SysReminder()   # 红包 新成员 撤回
 historyPlugin = HistoryRecorder()   # 记录消息
 plugins = [
     #PaiDuiHook(),
-    KeyHandler(),
-    GroupTagCloud(),
-    ActivityInfo(),
-    QAPlugin(),
-    LastSpeakTime(),
+    # KeyHandler(),
+    # GroupTagCloud(),
+    # ActivityInfo(),
+    # QAPlugin(),
+    # LastSpeakTime(),
     MemberDistribution(),
-    Tuling(),
+    # Tuling(),
     MsDuilian(),
-    BingText2Speech(),
+    # BingText2Speech(),
     ChengYuJieLong(),
-    LrcCreator(),
-    EasterEgg(),
+    # LrcCreator(),
+    # EasterEgg(),
     # VSGame(),
-    MicoIce(),
+    # MicoIce(),
     #GroupMessageForwarder([ '二群', '三群' ], [ 'AI二群测试中', 'AI三群测试' ])
 ]
 for plugin in plugins:
@@ -56,29 +59,32 @@ for plugin in plugins:
         logging.error('One of the plugins are not a subclass of ProcessInterface.')
         exit(-1)
 
+
 #群消息 文本和图片
 @itchat.msg_register([TEXT,PICTURE,VOICE], isGroupChat=True)
 def text_reply(msg):
     historyPlugin.process(msg, msg['Type'])
-    settingPlugin.process(msg, TEXT)    #设置
+    # settingPlugin.process(msg, TEXT)    #设置
     if not isRun(msg):
         return
-    for plugin in plugins:
-        try:
-            plugin.process(msg, msg['Type'])
-        except Exception as e:
-            logging.error('{}:{}'.format(e, str(type(plugin))))  # so that one plug's failure won't prevent others from being executed
+    # for plugin in plugins:
+    #     try:
+    #         plugin.process(msg, msg['Type'])
+    #     except Exception as e:
+    #         logging.error('{}:{}'.format(e, str(type(plugin))))  # so that one plug's failure won't prevent others from being executed
+
 
 #私聊调用图灵机器人
 @itchat.msg_register([TEXT,VOICE], isFriendChat=True)
 def text_reply(msg):
     if not isRun(msg):
         return
-    try:
-        historyPlugin.process2(msg, msg['Type'])
-        privateChatPlugin.process(msg, TEXT)
-    except Exception as e:
-        logging.error(e)
+    # try:
+    #     historyPlugin.process2(msg, msg['Type'])
+    #     privateChatPlugin.process(msg, TEXT)
+    # except Exception as e:
+    #     logging.error(e)
+
 
 #系统消息：红包 新成员 撤回
 @itchat.msg_register([NOTE], isGroupChat=True)
@@ -90,15 +96,16 @@ def text_reply(msg):
     except Exception as e:
         logging.error(e)
 
+
 #小冰
 @itchat.msg_register([TEXT,SYSTEM,PICTURE,VOICE], isMpChat=True)
 def xiaoice_replay(msg):
     if not isRun(msg):
         return
-    try:
-        plugins[-1].process(msg, msg['Type'])    #小冰
-    except Exception as e:
-        logging.error(e)
+    # try:
+    #     plugins[-1].process(msg, msg['Type'])    #小冰
+    # except Exception as e:
+    #     logging.error(e)
 
 # @itchat.msg_register([FRIENDS,SYSTEM,NOTE])
 # def add_friend(msg):
@@ -119,7 +126,7 @@ def isRun(msg):
         return True
 
     logging.info('机器人已关闭')
-    historyPlugin.process(msg, msg['Type']) #依然记录消息
+    # historyPlugin.process(msg, msg['Type']) #依然记录消息
     return False
 
 def bot_init():

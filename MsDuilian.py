@@ -2,8 +2,9 @@ from ProcessInterface import ProcessInterface
 import json
 import requests
 from itchat.content import *
-from utilities import *
+from util import *
 import itchat
+
 
 class MsDuilian(ProcessInterface):
     def __init__(self):

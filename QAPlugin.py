@@ -9,7 +9,7 @@ class QAPlugin(ProcessInterface):
         # self.collName = 'QA'
         # self.coll = DbClient[dbName][self.collName]
         logging.info('QAPlugin initialized.')
-        self.content_map = {'小葵': 'src/person/xk.gif', '登登': 'src/person/dd.gif', '兔子': 'src/person/tz.png', '小明': 'src/person/xm.png', '梦': 'src/person/meng.gif', '小灵儿': 'src/person/xle.gif'}
+        #self.content_map = {'小葵': 'src/person/xk.gif', '登登': 'src/person/dd.gif', '兔子': 'src/person/tz.png', '小明': 'src/person/xm.png', '梦': 'src/person/meng.gif', '小灵儿': 'src/person/xle.gif'}
 
     def process(self, msg, type):
         if not Settings[SettingEnum.QA]:
@@ -75,8 +75,8 @@ class QAPlugin(ProcessInterface):
         else:
             if isBotOwner(msg):
                 return
-            if content in self.content_map and group_name == 'VIP休息室':
-                itchat.send_image(self.content_map[content], group_id)
+            #if content in self.content_map and group_name == 'VIP休息室':
+             #   itchat.send_image(self.content_map[content], group_id)
             res = list(QAColl.find({'question': content, 'to': group_name}))
             if len(res) == 1:
                 itchat.send(res[0]['answer'], group_id)

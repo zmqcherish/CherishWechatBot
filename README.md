@@ -1,3 +1,6 @@
+
+# 废弃
+## 本项目已不再维护
 # CherishWechatBot
 CherishWechatBot 基于ItChat接口，以插件化的形式实现微信个人号的定制化功能。主要基于群，私聊的功能也可以实现。
 
